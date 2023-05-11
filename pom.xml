@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.0.6</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.example1</groupId>
+    <artifactId>springboot3native</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>springboot3native</name>
+    <description>Demo project for Spring Boot</description>
+    <properties>
+        <java.version>17</java.version>
+        <spring-boot.version>3.0.6</spring-boot.version>
+        <spring-cloud.version>2022.0.2</spring-cloud.version>
+        <run-args>
+            <!--
+            选择合适的事件类型是 Async Profiler 进行性能分析的重要一步。不同事件类型的采样数据可以帮助我们了解不同方面的应用程序性能瓶颈和优化点，因此需要根据具体需求选择最佳的事件类型。
+
+如果需要分析应用程序的启动性能，以下是几种可能的采样事件类型：
+
+    wall: 采集墙钟时间（Wall-clock Time），即从进程启动到结束所经过的实际时间。
+    ???startup: 采集 JVM 启动时间（JVM Startup Time），即 JVM 开始加载类和初始化运行时环境的时间。
+    alloc: 采集内存分配事件（Allocation Events），包括对象分配和回收事件，可以帮助了解应用程序在启动时的内存分配情况。
+    lock: 采集锁等待事件（Lock Contention），可以帮助了解应用程序在启动时的锁竞争情况。
+    cpu: 采集 CPU 周期事件（CPU Cycles），可以帮助了解应用程序在启动时的 CPU 使用情况。
+    itimer
+            -->
+            <!--            -XX:+UnlockDiagnosticVMOptions
+                        -XX:+DebugNonSafepoints
+                        -agentpath:/home/wusp2/arthas/async-profiler-2.9-linux-x64/build/libasyncProfiler.so=start,file=/home/wusp2/arch-performance/profile-cpu.html,event=cpu,framebufsize=16m,interval=1ms,jstackdepth=1024,threads-->
+            -DSPRING_CLOUD_CONFIG_URI=http://ebank:spdb1234@10.134.36.60:9804
+            -DEUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://ebank:spdb1234@10.137.107.223:9808/eureka/
+            -DSERVER_PORT=8090
+            <!-- -Dspring.application.name=mspmk-web-providentfund-wusp2
+             -Dcom.sun.management.jmxremote.port=8099
+             -Dcom.sun.management.jmxremote.ssl=false
+             -Dcom.sun.management.jmxremote.authenticate=false-->
+        </run-args>
+        <graalvm.agent.path>native-image</graalvm.agent.path>
+        <graalvm.handle.path>native-ext</graalvm.handle.path>
+        <graalvm.json.settings>
+            <!--
+                                                                     -H:ConfigurationFileDirectories=../native-image/
+                                 -->
+            -H:ConfigurationFileDirectories=${project.basedir}/${graalvm.agent.path}
+
+            <!-- -H:ConfigurationFileDirectories=../${graalvm.handle.path}-->
+            <!--                               -H:ReflectionConfigurationFiles=../native-image/reflect-config.json
+
+   -H:DynamicProxyConfigurationResources proxy-config.json
+   -H:JNIConfigurationResources jni-config.json
+   -H:ReflectionConfigurationResources reflect-config.json
+   -H:ResourceConfigurationResources resource-config.json
+   -H:SubstitutionResources
+   -H:SerializationConfigurationResources serialization-config.json
+
+       -->
+        </graalvm.json.settings>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <configuration>
+                    <buildArgs>
+                        <buildArg>
+                            ${run-args}
+                        </buildArg>
+                        <buildArg>
+                            ${graalvm.json.settings}
+                        </buildArg>
+                        <buildArg>
+                            -H:+ReportExceptionStackTraces
+                            <!--&#45;&#45;initialize-at-build-time=org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory-->
+                        </buildArg>
+                    </buildArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
